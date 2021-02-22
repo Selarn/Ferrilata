@@ -129,6 +129,14 @@ void Server::send(qint8 type, qint8 subtype, QTcpSocket* socket, qint64 mess_id,
     socket->write( array );
 }
 
+SUser* Server::get_user(qint32 user_id) {
+    return users[user_id];
+}
+
+ServerStorage* Server::get_storage() {
+    return storage;
+}
+
 void Server::delete_user_session(qint32 user_id) {
     if ( users.find( user_id ) != users.end() ) {
         users[user_id]->deleteLater();
@@ -218,7 +226,7 @@ void Channel::process_data() {
             if ( package.subtype == 2 ) {
                 qint32 user_id;
                 package >> user_id;
-                QDateTime last_datetime = server->storage->last_datetime( curr_user_id, user_id );
+                QDateTime last_datetime = server->get_storage()->last_datetime( curr_user_id, user_id );
                 Server::send( 3, 1, socket, package.id, { (Wrapper*)new DateTimeWrap(last_datetime) } );
             }
             else if ( package.subtype == 3 ) {
@@ -229,7 +237,7 @@ void Channel::process_data() {
                     Server::send( 4, 0, socket, 0, { (Wrapper*)new Int32Wrap(0), (Wrapper*)new StringWrap("Nice DDOS."), (Wrapper*)new DateTimeWrap(QDateTime::currentDateTime()) } );
                     max_count %= 100;
                 }
-                MessagesVect messages = server->storage->last_messages( curr_user_id, user_id, datetime, max_count );
+                MessagesVect messages = server->get_storage()->last_messages( curr_user_id, user_id, datetime, max_count );
                 Server::send( 3, 2, socket, package.id, { (Wrapper*)new MessVectWrap(messages) } );
             }
             else if ( package.subtype == 4 ) {
@@ -241,7 +249,7 @@ void Channel::process_data() {
                 server->send_text( curr_user_id, reciver_id, text, datetime );                
             }
             else if ( package.subtype == 5 ) {
-                Server::send( 3, 3, socket, package.id, { (Wrapper*)new UsersVectWrap(server->storage->get_users()) });
+                Server::send( 3, 3, socket, package.id, { (Wrapper*)new UsersVectWrap(server->get_storage()->get_users()) });
             }
             else {
                 qDebug() << "Strange requst with subtype: " << QString::number(package.subtype);

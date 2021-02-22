@@ -22,14 +22,15 @@ class Server: public QObject {
         Q_OBJECT
 
     public:
-        QMap<qint32, SUser*> users; // READ ONLY !!!
-        ServerStorage* storage; // READ ONLY !!!
 
         explicit Server( int port );
 
         void send_text( qint32 sender_id, qint32 reciver_id, const QString& text, const QDateTime& datetime );
 
-        static void send(qint8 type, qint8 subtype, QTcpSocket *socket, qint64 mess_id = 0, QVector<Wrapper*> data = {} ); // call "delete" for every Wrapper*
+        static void send( qint8 type, qint8 subtype, QTcpSocket *socket, qint64 mess_id = 0, QVector<Wrapper*> data = {} ); // Warning: this func call "delete" for every object in "data"
+
+        SUser* get_user( qint32 user_id );
+        ServerStorage* get_storage();
 
     public slots:
         void delete_user_session(qint32 user_id);
@@ -38,6 +39,8 @@ class Server: public QObject {
 
     private:
         QTcpServer* server;
+        QMap<qint32, SUser*> users;
+        ServerStorage* storage;
 
         void add_session( qint32 user_id, QTcpSocket* socket );
 };
