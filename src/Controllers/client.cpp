@@ -22,7 +22,7 @@ Client::~Client() {
     delete settings;
 }
 
-Responce *Client::send_text(qint32 reciver_id, const QString &text) {
+Responce *Client::send_text(UserID reciver_id, const QString &text) {
     return network->send_text(reciver_id, text);
 }
 
@@ -34,11 +34,11 @@ Responce *Client::sign_in(const QString &login, const QString &pass) {
     return network->sign_in(login, pass);
 }
 
-Responce *Client::datetime_of_last_message(qint32 user_id) {
+Responce *Client::datetime_of_last_message(UserID user_id) {
     return network->datetime_of_last_message( user_id );
 }
 
-Responce *Client::last_messages(qint32 user_id, const QDateTime &datetime, qint32 max_count) {
+Responce *Client::last_messages(UserID user_id, const QDateTime &datetime, qint32 max_count) {
     return network->last_messages( user_id, datetime, max_count );
 }
 

@@ -9,7 +9,7 @@ Storage::~Storage() {
 
 }
 
-void Storage::add_message(qint32 sender_id, MessageData *data) {
+void Storage::add_message(UserID sender_id, MessageData *data) {
     dialogs[sender_id].push_back( new MessageData( *data ) );
 }
 
@@ -17,7 +17,7 @@ const QVector<Contact *> Storage::get_dialogs() {
     return contacts.values().toVector();
 }
 
-const QVector<MessageData *> Storage::first_messages(qint32 user_id, int count) {
+const QVector<MessageData *> Storage::first_messages(UserID user_id, int count) {
     auto iterator = dialogs[user_id].begin();
     auto end_iter = dialogs[user_id].end();
     QVector<MessageData*> res;

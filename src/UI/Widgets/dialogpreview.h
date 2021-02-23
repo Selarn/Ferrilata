@@ -1,6 +1,8 @@
 #ifndef DIALOGPREVIEW_H
 #define DIALOGPREVIEW_H
 
+#include "src/typedefs.h"
+
 #include <QPushButton>
 #include <QWidget>
 
@@ -16,7 +18,7 @@ class DialogPreview : public QWidget {
         ~DialogPreview();
 
     signals:
-        void dialog_selected(qint32 user_id);
+        void dialog_selected(UserID user_id);
 
     private:
         Ui::DialogPreview *ui;
@@ -25,13 +27,13 @@ class DialogPreview : public QWidget {
 class DialogPreviewCrutch: public QPushButton {
         Q_OBJECT
 
-        qint32 reciver_id;
+        UserID reciver_id;
 
     signals:
-        void dialog_selected( qint32 user_id );
+        void dialog_selected( UserID user_id );
 
     public:
-        explicit DialogPreviewCrutch(qint32 user_id, const QString& username, QWidget *parent = nullptr);
+        explicit DialogPreviewCrutch(UserID user_id, const QString& username, QWidget *parent = nullptr);
         ~DialogPreviewCrutch();
 
     protected slots:

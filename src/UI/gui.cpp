@@ -26,28 +26,28 @@ void GUI::show() {
     auth->show();
 }
 
-void GUI::add_message(qint32 sender_id, MessageData *message) {
+void GUI::add_message(UserID sender_id, MessageData *message) {
     mainwindow->add_message(sender_id, message);
     storage->add_message(sender_id, message);
     delete message;
 }
 
-void GUI::message_delivered(qint32 user_id, QDateTime *sending_time) {
+void GUI::message_delivered(UserID user_id, QDateTime *sending_time) {
     mainwindow->message_delivered( user_id, *sending_time );
     delete sending_time;
 }
 
-void GUI::dialog_viewed(qint32 user_id) {
+void GUI::dialog_viewed(UserID user_id) {
     mainwindow->dialog_viewed( user_id );
 }
 
-void GUI::user_registered(qint32 user_id, QString *username) {
+void GUI::user_registered(UserID user_id, QString *username) {
     qDebug() << "Get information of registration user \"" << *username << "\" with id " << QString::number(user_id);
     mainwindow->add_dialogs({ {user_id, *username} });
     delete username;
 }
 
-void GUI::send_text(qint32 reciver_id, const QString &text) {
+void GUI::send_text(UserID reciver_id, const QString &text) {
     storage->add_message(reciver_id, (MessageData*) new TextMessageData(reciver_id, text, QDateTime::currentDateTime(), false ));
     Responce* res = client->send_text(reciver_id, text);
     if ( res->is_error() ) {

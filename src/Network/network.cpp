@@ -141,108 +141,29 @@ void Network::process_notify(Package *package) {
         QDateTime datetime;
         QString text;
         bool recived;
-        qint32 user_id;
+        UserID user_id;
         (*package) >> user_id >> text >> datetime >> recived;
         emit message_recived( user_id, (MessageData*)new TextMessageData(user_id, text, datetime, recived) );
     }
     else if ( package->subtype == 1 ) {
         QDateTime datetime;
-        qint32 user_id;
+        UserID user_id;
         (*package) >> user_id >> datetime;
         emit message_delivered( user_id, new QDateTime(datetime) );
     }
     else if ( package->subtype == 2 ) {
-        qint32 user_id;
+        UserID user_id;
         (*package) >> user_id;
         emit dialog_viewed( user_id );
     }
     else if (package->subtype == 3 ) {
-        qint32 user_id;
+        UserID user_id;
         QString username;
         (*package) >> user_id >> username;
         emit user_registered( user_id, new QString(username) );
     }
     qDebug() << "Notify package with type 3:" << QString::number(package->subtype) << " was processed";
 }
-
-/* Памятник человеческой глупости
- *
-void Network::send(qint8 type, qint8 subtype, ...) {
-    va_list list; // здесь будут элементы из эллипса(...)
-    va_start( list, subtype ); // init эллипса
-
-    QByteArray  byte_arr;
-    QDataStream out( &byte_arr, QIODevice::WriteOnly );
-    out.setVersion( QDataStream::Qt_5_5 );
-
-    out << (qint8)(type * 16 + subtype);
-    // 0 0 - conn check
-    if ( !( type | subtype ) ) {
-        ReqStates::Requests::list.push_back( 1000 );
-    }
-    else {
-        qint32 length = 0;
-
-        out << length;
-
-        // login or registration
-        if ( type == 2 && ( subtype == 0 || subtype == 1 ) ) {
-            QString* login = va_arg( list, QString* );
-            QString* pass  = va_arg( list, QString* );
-            login->resize( 30 );
-            pass->resize( 50 );
-
-            out << (*login);
-            out << (*pass);
-            
-            // login 
-            if ( subtype == 0 )
-                ReqStates::Login::list.push_back( 1 );
-
-            // registration
-            if ( subtype == 1 ) {
-                ReqStates::Registration::list.push_back( 1 );
-                QString* email = va_arg( list, QString* );
-                email->resize( 30 );
-
-                out << (*email);
-            }
-        }
-        else {
-            qint64 id = mess_id;
-            //update mess_id
-            next_mess_id();
-
-            out << id;
-            ReqStates::Requests::list.push_back( id % 1000 );
-
-            // reqests
-            if ( type == 2 ) {
-                // req 2 2 don't req sending data
-                if ( subtype == 3 ) {
-                    out << va_arg( list, qint32 );
-                }
-                else if ( subtype == 4 ) {
-                    qint32 rec_id = va_arg( list, qint32 );
-                    QString* text = va_arg( list, QString* );
-                    text->resize( 100 );
-
-                    out << rec_id;
-                    out <<  (*text);
-                }
-            }
-        }
-
-        length = byte_arr.size();
-        // 1 = sizeof(qint8)
-        out.device()->seek( 1 );
-        out << length;
-
-    }
-    va_end(list);
-    socket->write( byte_arr );
-}
-*/
 
 bool Network::log_in() {
     static const int login_code = 1001;
@@ -314,7 +235,7 @@ Responce* Network::sign_in(const QString& login, const QString& pass) {
     return new BoolResp(log_in());
 }
 
-Responce* Network::send_text(qint32 rec_id, const QString& text) {
+Responce* Network::send_text(UserID rec_id, const QString& text) {
     int number = mess_id % 1000;
     send( 2, 4, {(Wrapper*)new Int32Wrap(rec_id),
                  (Wrapper*)new StringWrap(text),
@@ -333,7 +254,7 @@ Responce* Network::send_text(qint32 rec_id, const QString& text) {
     return res;
 }
 
-Responce *Network::datetime_of_last_message(qint32 user_id) {
+Responce *Network::datetime_of_last_message(UserID user_id) {
     int number = mess_id % 1000;
     send( 2, 2, {(Wrapper*)new Int32Wrap(user_id)} );
     ReqStates::Requests::list.push_back( number );
@@ -350,7 +271,7 @@ Responce *Network::datetime_of_last_message(qint32 user_id) {
     return res;
 }
 
-Responce *Network::last_messages(qint32 user_id, const QDateTime &datetime, qint32 max_count) {
+Responce *Network::last_messages(UserID user_id, const QDateTime &datetime, qint32 max_count) {
     int number = mess_id % 1000;
     send( 2, 3, {(Wrapper*)new Int32Wrap(user_id),
                  (Wrapper*)new DateTimeWrap(datetime),
@@ -525,7 +446,7 @@ FalseNetwork::FalseNetwork(const QHostAddress &address, quint16 port): QObject()
 
 FalseNetwork::~FalseNetwork() { }
 
-Responce *FalseNetwork::send_text(qint32 reciver_id, const QString &text) {
+Responce *FalseNetwork::send_text(UserID reciver_id, const QString &text) {
     qDebug() << "<" << text << "> Sended to " << QString::number(reciver_id);
     return new BoolResp(true);
 }

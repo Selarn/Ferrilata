@@ -4,6 +4,7 @@
 #include "src/Network/responces.h"
 #include "src/Network/wrappers.h"
 #include "src/Network/package.h"
+#include "src/typedefs.h"
 
 #include <QCryptographicHash>
 #include <QCoreApplication>
@@ -52,18 +53,18 @@ class Network: public QObject {
 
     signals:
 
-        void message_recived( qint32 sender_id, MessageData* message );
-        void message_delivered( qint32 user_id, QDateTime* sending_time );
-        void dialog_viewed( qint32 user_id );
-        void user_registered( qint32 user_id, QString* username );
+        void message_recived( UserID sender_id, MessageData* message );
+        void message_delivered( UserID user_id, QDateTime* sending_time );
+        void dialog_viewed( UserID user_id );
+        void user_registered( UserID user_id, QString* username );
 
     public:
 
         Responce* sign_up( const QString& login, const QString& pass, const QString& email );
         Responce* sign_in( const QString& login, const QString& pass );
-        Responce* send_text(  qint32 reciver_id, const QString& text );
-        Responce* datetime_of_last_message( qint32 user_id );
-        Responce* last_messages( qint32 user_id, const QDateTime& datetime, qint32 max_count );
+        Responce* send_text( UserID reciver_id, const QString& text );
+        Responce* datetime_of_last_message( UserID user_id );
+        Responce* last_messages( UserID user_id, const QDateTime& datetime, qint32 max_count );
         Responce* get_users();
 
         bool check_connection(); // not finished
@@ -138,13 +139,13 @@ class FalseNetwork: public QObject {
 
     signals:
 
-        void message_recived( qint32 sender_id, MessageData* message );
+        void message_recived( UserID sender_id, MessageData* message );
 
     public:
 
         Responce* sign_up( const QString& login, const QString& pass, const QString& email );
         Responce* sign_in( const QString& login, const QString& pass );
-        Responce* send_text(  qint32 reciver_id, const QString& text );
+        Responce* send_text( UserID reciver_id, const QString& text );
 
         bool check_connection();
 

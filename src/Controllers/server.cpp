@@ -14,7 +14,7 @@ Server::Server(int port) : QObject(0) {
     connect( server, &QTcpServer::newConnection, this, &Server::new_connection );
 }
 
-void Server::send_text(qint32 sender_id, qint32 reciver_id, const QString &text, const QDateTime &datetime) {
+void Server::send_text(UserID sender_id, UserID reciver_id, const QString &text, const QDateTime &datetime) {
     users[sender_id]->send_text( reciver_id, text, datetime, false );
     storage->save_text_message( sender_id, reciver_id, text, datetime );
     auto reciver = users.find( reciver_id );
@@ -40,7 +40,7 @@ void Server::read_data() {
         else if ( package.type == 2 && package.subtype == 0 ) {
             QString login, pass;
             package >> login >> pass;
-            qint32 user_id = storage->log_in( login, pass );
+            UserID user_id = storage->log_in( login, pass );
             if ( user_id == 0 ) {
                 send( 1, 1, sock, package.id );
             } else {
@@ -55,7 +55,7 @@ void Server::read_data() {
             if ( errors != 0 ) {
                 send( 1, 2, sock, package.id, { (Wrapper*)new UInt8Wrap(errors) } );
             } else {
-                qint32 user_id = storage->log_in( login, pass );
+                UserID user_id = storage->log_in( login, pass );
                 for ( SUser* user: users.values() ) {
                     user->welcome_new_user( user_id, login );
                 }
@@ -129,7 +129,7 @@ void Server::send(qint8 type, qint8 subtype, QTcpSocket* socket, qint64 mess_id,
     socket->write( array );
 }
 
-SUser* Server::get_user(qint32 user_id) {
+SUser* Server::get_user(UserID user_id) {
     return users[user_id];
 }
 
@@ -137,14 +137,14 @@ ServerStorage* Server::get_storage() {
     return storage;
 }
 
-void Server::delete_user_session(qint32 user_id) {
+void Server::delete_user_session(UserID user_id) {
     if ( users.find( user_id ) != users.end() ) {
         users[user_id]->deleteLater();
         users.remove( user_id );
     }
 }
 
-void Server::add_session(qint32 user_id, QTcpSocket *socket) {
+void Server::add_session(UserID user_id, QTcpSocket *socket) {
     disconnect( socket, &QTcpSocket::readyRead, this, &Server::read_data );
     if ( users.find( user_id ) == users.end() ) {
         SUser* user = new SUser(user_id, this);
@@ -157,7 +157,7 @@ void Server::add_session(qint32 user_id, QTcpSocket *socket) {
 
 //_User_________________________________________________________________________________________________________________________________________________________________/\User|
 
-SUser::SUser(qint32 user_id, Server *server_): QObject(server_) {
+SUser::SUser(UserID user_id, Server *server_): QObject(server_) {
     channels.clear();
     server = server_;
     id = user_id;
@@ -169,18 +169,18 @@ void SUser::add_session(QTcpSocket *socket) {
     channels.push_back( channel );
 }
 
-void SUser::send_text(qint32 user_id, const QString &text, const QDateTime &datetime, bool recived) {
+void SUser::send_text(UserID user_id, const QString &text, const QDateTime &datetime, bool recived) {
     for ( Channel* channel: channels ) {
-        Server::send( 4, 0, channel->get_socket(), 0, { (Wrapper*)new Int32Wrap(user_id),
+        Server::send( 4, 0, channel->get_socket(), 0, { (Wrapper*)new Int32Wrap(user_id), //depends on the user_id type
                                                         (Wrapper*)new StringWrap(text),
                                                         (Wrapper*)new DateTimeWrap(datetime),
                                                         (Wrapper*)new BoolWrap(recived)       } );
     }
 }
 
-void SUser::welcome_new_user(qint32 user_id, const QString &username) {
+void SUser::welcome_new_user(UserID user_id, const QString &username) {
     for ( Channel* channel: channels ) {
-        Server::send( 4, 3, channel->get_socket(), 0, {(Wrapper*)new Int32Wrap(user_id), (Wrapper*)new StringWrap(username)} );
+        Server::send( 4, 3, channel->get_socket(), 0, {(Wrapper*)new Int32Wrap(user_id), (Wrapper*)new StringWrap(username)} ); //depends on the user_id type
         send_text( user_id, "Hey there! I am using Ferrilata messanger!", QDateTime::currentDateTime(), true );
     }
 }
@@ -199,7 +199,7 @@ void SUser::delete_channel() {
 
 //_Channel___________________________________________________________________________________________________________________________________________________________/\Channel|
 
-Channel::Channel(QTcpSocket *socket_, qint32 user_id_, Server *server_): QObject(server_) {
+Channel::Channel(QTcpSocket *socket_, UserID user_id_, Server *server_): QObject(server_) {
     curr_user_id = user_id_;
     socket = socket_;
     server = server_;
@@ -224,13 +224,14 @@ void Channel::process_data() {
         }
         else if ( package.type == 2 ) {
             if ( package.subtype == 2 ) {
-                qint32 user_id;
+                UserID user_id;
                 package >> user_id;
                 QDateTime last_datetime = server->get_storage()->last_datetime( curr_user_id, user_id );
                 Server::send( 3, 1, socket, package.id, { (Wrapper*)new DateTimeWrap(last_datetime) } );
             }
             else if ( package.subtype == 3 ) {
-                qint32 user_id, max_count;
+                UserID user_id;
+                qint32 max_count;
                 QDateTime datetime;
                 package >> user_id >> datetime >> max_count;
                 if ( max_count > 100 ) {
@@ -242,7 +243,7 @@ void Channel::process_data() {
             }
             else if ( package.subtype == 4 ) {
                 QDateTime datetime;
-                qint32 reciver_id;
+                UserID reciver_id;
                 QString text;
                 package >> reciver_id >> text >> datetime;
                 Server::send( 0, 2, socket, package.id );
@@ -264,7 +265,7 @@ void Channel::process_data() {
 
 //_Storage___________________________________________________________________________________________________________________________________________________________/\Storage|
 
-qint64 ServerStorage::dialog_id(qint32 first_user_id, qint32 sec_user_id) {
+qint64 ServerStorage::dialog_id(UserID first_user_id, UserID sec_user_id) {
     qint64 max, min;
     if ( first_user_id > sec_user_id ) {
         max = first_user_id;
@@ -273,7 +274,7 @@ qint64 ServerStorage::dialog_id(qint32 first_user_id, qint32 sec_user_id) {
         max = sec_user_id;
         min = first_user_id;
     }
-    return min * (qint64(1)<<32) + max; // min * 2^32 + max
+    return min * (qint64(1)<<32) + max;
 }
 
 bool ServerStorage::pass_check(const QString &pass) {
@@ -281,14 +282,14 @@ bool ServerStorage::pass_check(const QString &pass) {
 }
 
 void ServerStorage::add_user(const QString &login, const QString &pass, const QString &mail) {
-    qint32 user_id = new_id();
+    UserID user_id = new_id();
     SSUser* user = new SSUser({user_id, login, pass, mail});
     users[user_id] = user;
     users_by_login[login] = user;
 }
 
-qint32 ServerStorage::new_id() {
-    static qint32 min_unused_id = 0;
+UserID ServerStorage::new_id() {
+    static UserID min_unused_id = 0;
     return min_unused_id++;
 }
 
@@ -315,12 +316,12 @@ UsersVect ServerStorage::get_users() {
     return res;
 }
 
-const QDateTime &ServerStorage::last_datetime(qint32 first_id, qint32 second_id) {
+const QDateTime &ServerStorage::last_datetime(UserID first_id, UserID second_id) {
     qint64 d_id = dialog_id( first_id, second_id );
     return messages[d_id].last()->datetime;
 }
 
-MessagesVect ServerStorage::last_messages(qint32 first_id, qint32 second_id, const QDateTime &datetime, qint32 max_count) {
+MessagesVect ServerStorage::last_messages(UserID first_id, UserID second_id, const QDateTime &datetime, qint32 max_count) {
     qint64 d_id = dialog_id( first_id, second_id );
     auto iter = messages[d_id].rbegin();
     MessagesVect res;
@@ -331,12 +332,12 @@ MessagesVect ServerStorage::last_messages(qint32 first_id, qint32 second_id, con
     return res;
 }
 
-void ServerStorage::save_text_message(qint32 sender_id, qint32 reciver_id, const QString &text, const QDateTime &datetime) {
+void ServerStorage::save_text_message(UserID sender_id, UserID reciver_id, const QString &text, const QDateTime &datetime) {
     qint64 d_id = dialog_id(sender_id, reciver_id);
     messages[d_id].push_back( new SSTextMessage({sender_id, text, datetime}) );
 }
 
-qint32 ServerStorage::log_in(const QString &login, const QString &pass) {
+UserID ServerStorage::log_in(const QString &login, const QString &pass) {
     auto user = users_by_login.find( login );
     if ( user == users_by_login.end() )
         return 0;
@@ -361,7 +362,7 @@ quint8 ServerStorage::sign_up(const QString &login, const QString &pass, const Q
         errors += 8;
 
     if ( errors == 0 ) {
-        qint32 user_id = new_id();
+        UserID user_id = new_id();
         SSUser* user = new SSUser({user_id, login, pass, mail});
         users[user_id] = user;
         users_by_login[login] = user;

@@ -3,6 +3,7 @@
 
 #include "src/Network/wrappers.h"
 #include "src/Network/package.h"
+#include "src/typedefs.h"
 
 #include <QtGlobal>
 
@@ -78,18 +79,18 @@ class UsersVectResp: public Responce {
 // Messages
 class MessageData: public Responce {
         QDateTime datetime;
-        qint32 sender_id;
+        UserID sender_id;
         bool received; // True if received from another user, false if sent by the current user
         char state;
     public:
-        MessageData( qint32            sender_id_,
+        MessageData( UserID         sender_id_,
                      const QDateTime&  datetime_,
                      bool              received_,
                      char              type_ = 0):
             Responce(type_), datetime(datetime_), sender_id(sender_id_), received(received_) { state = MessageData::WAIT_UPLOAD; }
         ~MessageData() {}
         void delete_message() { type = Responce::DELETED_MESSAGE; }
-        qint32           get_sender_id() { return sender_id; }
+        UserID        get_sender_id() { return sender_id; }
         const QDateTime& get_datetime()  { return datetime; }
         char             get_state()     { return state; }
         bool             was_received()  { return received; }
@@ -103,7 +104,7 @@ class MessageData: public Responce {
 class TextMessageData: public MessageData {
         QString text;
     public:
-        TextMessageData( qint32            sender_id_,
+        TextMessageData( UserID         sender_id_,
                          const QString&    text_,
                          const QDateTime&  datetime_,
                          bool              received_ ):

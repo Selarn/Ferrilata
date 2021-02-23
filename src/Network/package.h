@@ -2,6 +2,7 @@
 #define PACKAGE_H
 
 #include "src/Network/wrappers.h"
+#include "src/typedefs.h"
 
 #include <QDataStream>
 #include <QDateTime>

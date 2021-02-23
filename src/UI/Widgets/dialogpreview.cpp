@@ -10,7 +10,7 @@ DialogPreview::~DialogPreview() {
     delete ui;
 }
 
-DialogPreviewCrutch::DialogPreviewCrutch(qint32 user_id, const QString& username, QWidget *parent): QPushButton(username, parent) {
+DialogPreviewCrutch::DialogPreviewCrutch(UserID user_id, const QString& username, QWidget *parent): QPushButton(username, parent) {
     setMaximumSize(210, 50);
     setAutoFillBackground( true );
     reciver_id = user_id;

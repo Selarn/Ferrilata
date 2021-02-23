@@ -1,6 +1,8 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
+#include "src/typedefs.h"
+
 #include <QDateTime>
 #include <QVector>
 #include <QString>
@@ -65,7 +67,7 @@ class Int64Wrap: public Wrapper {
 
 
 struct SSTextMessage {
-    qint32 sender_id;
+    UserID sender_id;
     QString text;
     QDateTime datetime;
 };
@@ -85,7 +87,7 @@ class BoolWrap: public Wrapper {
         ~BoolWrap() {}
 };
 
-typedef QVector<QPair<qint32,QString>> UsersVect;
+typedef QVector<QPair<UserID,QString>> UsersVect;
 
 class UsersVectWrap: public Wrapper {
     public:

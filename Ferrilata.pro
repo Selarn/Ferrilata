@@ -50,7 +50,8 @@ HEADERS += \
     src/UI/MainWindow/mainwindow.h \
     src/UI/Authentification/authentification.h \
     src/UI/Widgets/message.h \
-    src/UI/Widgets/dialog.h \
+    src/UI/Widgets/dialog.h \ \
+    src/typedefs.h
 
 
 FORMS += src/UI/MainWindow/mainwindow.ui \

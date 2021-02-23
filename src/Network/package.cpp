@@ -89,16 +89,13 @@ Package &Package::operator >>(QDateTime &var) {
 Package &Package::operator >>(MessagesVect &var) {
     QDateTime datetime;
     QString text;
-    qint32 count, sender_id;
+    UserID sender_id;
+    qint32 count;
     if ( sock->bytesAvailable() < (qint64)sizeof(qint32) ) {
         qDebug() << "failed to read size of MessagesVect from package!";
         return *this;
     }
     inp >> count;
-    if ( sock->bytesAvailable() < count * ((qint64)sizeof(qint32) + (qint64)sizeof(QString) + (qint64)sizeof(QDateTime)) ) {
-        qDebug() << "failed to read MessagesVect from package!";
-        return *this;
-    }
     for ( qint32 i = 0; i < count; ++i ) {
         inp >> sender_id >> text >> datetime;
         var.push_back({ sender_id, text, datetime });
@@ -107,17 +104,14 @@ Package &Package::operator >>(MessagesVect &var) {
 }
 
 Package &Package::operator >>(UsersVect &var) {
-    qint32 count, user_id;
     QString username;
+    UserID user_id;
+    qint32 count;
     if ( sock->bytesAvailable() < (qint64)sizeof(qint32) ) {
         qDebug() << "failed to read size of MessagesVect from package!";
         return *this;
     }
     inp >> count;
-    if ( sock->bytesAvailable() < count * ((qint64)sizeof(qint32) + (qint64)sizeof(QString)) ) {
-        qDebug() << "failed to read MessagesVect from package!";
-        return *this;
-    }
     for ( qint32 i = 0; i < count; ++i ) {
         inp >> user_id >> username;
         var.push_back({ user_id, username });

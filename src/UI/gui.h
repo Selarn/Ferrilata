@@ -4,6 +4,7 @@
 #include "src/UI/Authentification/authentification.h"
 #include "src/UI/MainWindow/mainwindow.h"
 #include "src/Storage/storage.h"
+#include "src/typedefs.h"
 
 #include <QObject>
 
@@ -25,10 +26,10 @@ class GUI : public QObject {
         void show();
 
     public slots:
-        void add_message( qint32 sender_id, MessageData* message );
-        void message_delivered( qint32 user_id, QDateTime* sending_time );
-        void dialog_viewed( qint32 user_id );
-        void user_registered( qint32 user_id, QString* username );
+        void add_message( UserID sender_id, MessageData* message );
+        void message_delivered( UserID user_id, QDateTime* sending_time );
+        void dialog_viewed( UserID user_id );
+        void user_registered( UserID user_id, QString* username );
 
     signals:
         // General
@@ -43,7 +44,7 @@ class GUI : public QObject {
         void sign_up( const QString& login, const QString& pass, const QString& email );
         void sign_in( const QString& login, const QString& pass );
         // for Dialogs
-        void send_text(  qint32 reciver_id, const QString& text );
+        void send_text(  UserID reciver_id, const QString& text );
 
     private:
         bool connected;

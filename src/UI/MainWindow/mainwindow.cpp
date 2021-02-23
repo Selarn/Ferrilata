@@ -25,16 +25,16 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::add_dialogs(QVector<QPair<qint32, QString> > users) {
+void MainWindow::add_dialogs(QVector<QPair<UserID, QString> > users) {
     for ( auto user: users )
         add_dialog( user.first, user.second );
 }
 
-void MainWindow::dialog_viewed(qint32 user_id) {
+void MainWindow::dialog_viewed(UserID user_id) {
     qDebug() << "Dialog with user " << QString::number(user_id) << " viewed.";
 }
 
-void MainWindow::add_message(qint32 sender_id, MessageData* message) {
+void MainWindow::add_message(UserID sender_id, MessageData* message) {
     if (dialogs.find(sender_id) == dialogs.end()) {
         // add_dialog( sender_id );
         qDebug() << "Message from unkmown user";
@@ -43,11 +43,11 @@ void MainWindow::add_message(qint32 sender_id, MessageData* message) {
     dialogs[sender_id]->add_message(message);
 }
 
-void MainWindow::message_delivered(qint32 user_id, const QDateTime &sending_time) {
+void MainWindow::message_delivered(UserID user_id, const QDateTime &sending_time) {
     qDebug() << "Message to user " << QString::number(user_id) << " sended " << sending_time.time().toString() << " was delivered.";
 }
 
-void MainWindow::dialog_selected(qint32 user_id) {
+void MainWindow::dialog_selected(UserID user_id) {
     if ( current_dialog != user_id ) {
         current_dialog = user_id;
         Dialog* dialog = dialogs[user_id];
@@ -57,7 +57,7 @@ void MainWindow::dialog_selected(qint32 user_id) {
     }
 }
 
-void MainWindow::add_dialog(qint32 user_id, const QString &username) {
+void MainWindow::add_dialog(UserID user_id, const QString &username) {
     DialogPreviewCrutch* item = new DialogPreviewCrutch(user_id, username, this);
     connect( item, &DialogPreviewCrutch::dialog_selected, this, &MainWindow::dialog_selected );
     dialogs_layout->addWidget(item);

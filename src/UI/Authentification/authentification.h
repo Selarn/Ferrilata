@@ -1,6 +1,8 @@
 #ifndef Authentification_H
 #define Authentification_H
 
+#include "src/typedefs.h"
+
 #include <QPushButton>
 #include <QMessageBox>
 #include <QFormLayout>
